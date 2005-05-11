@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for i in `seq 0 7`
+do 
+    let a=1024*$i
+    ./lpc935-prog -p /dev/ttyS0 -r scrc -a $a
+done
