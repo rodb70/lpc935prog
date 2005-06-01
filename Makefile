@@ -22,6 +22,7 @@
 CC := $(CROSS_COMPILE)gcc
 
 LDFLAGS :=
+
 SRC :=
 SRC += ihex.c
 SRC += lpc935-prog.c
@@ -47,9 +48,9 @@ clean :
 	rm -rf $(patsubst %.c,%.o,$(SRC)) $(patsubst %.c,%.d,$(SRC)) lpc935-prog$(EXT)
 
 %.d : %.c 
-	$(CC) -MM $(INCLUDES) $(CFLAGS) $< > $*.d
+	$(CC) -MM $(CFLAGS) $< > $*.d
 
 %.o: %.c
-	$(CC)  $(CFLAGS) -c $< -o $*.o
+	$(CC) $(CFLAGS) -c $< -o $*.o
 
 include $(patsubst %.c,%.d,$(SRC))
