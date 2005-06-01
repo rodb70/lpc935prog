@@ -44,7 +44,7 @@ lpc935-prog$(EXT): $(patsubst %.c,%.o, $(SRC))
 
 .PHONY : clean
 clean :
-	rm $(patsubst %.c,%.o,$(SRC)) $(patsubst %.c,%.d,$(SRC)) lpc935-prog$(EXT)
+	rm -rf $(patsubst %.c,%.o,$(SRC)) $(patsubst %.c,%.d,$(SRC)) lpc935-prog$(EXT)
 
 %.d : %.c 
 	$(CC) -MM $(INCLUDES) $(CFLAGS) $< > $*.d
