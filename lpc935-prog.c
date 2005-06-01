@@ -183,7 +183,7 @@ struct poptOption optionsTable[] =
       "Write a control register to the micro", "ucfg1|bootv|statb" },
 
     { "read", 'r', POPT_ARG_STRING, &pacSubCommand, eREAD,
-      "Read a control register the micro", "ids|version|statb|bootv|ucfg1|secx|gcrc|scrc" },
+      "Read a control register from the micro", "ids|version|statb|bootv|ucfg1|secx|gcrc|scrc" },
     
     { "erase", 'e', POPT_ARG_STRING, &pacSubCommand, eERASE,
       "Erase a sector or page from the flash", "sector|page" },
@@ -454,7 +454,6 @@ static unsigned long lpc_GetReplyLong( char *pacTxd, char *pacRxd )
 
 static void debug_printf( const char *pacFormat, ... )
 {
-    /* Guess we need no more than 100 bytes. */
     char p[ 2048 ];
     va_list ap;
 
@@ -849,8 +848,6 @@ static int lpc_EraseSector( tsSerialPort *psSerPrt, unsigned short wSectorAddr )
     unsigned char bReplySize;
     unsigned char abDat[ 3 ];
     
-    zShowDebug = 1; /* Switch on debug I don't know what is going to happen */
-    
     debug_printf( "Read lpc935 security byte from port %s baud = %d\n", pacComPort, zBaud );
 
     /* Erase sector */
@@ -901,8 +898,6 @@ static int lpc_Reset( tsSerialPort *psSerPrt )
     char acIhexStr[ 20 ];
     char acRply[ 100 ];
     unsigned char bReplySize;
-
-    zShowDebug = 1; /* Switch on debug I don't know what is going to happen */
 
     debug_printf( "Reset the micro-controller on port %s baud = %d\n", pacComPort, zBaud );
     snintel_hex( acIhexStr, sizeof( acIhexStr ), RESET_MCU, 0, 0, 0 );
