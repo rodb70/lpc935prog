@@ -34,9 +34,9 @@ CFLAGS += -DWINDOWS
 EXT := .exe
 else
 SRC += ser_linux.c
-CFLAGS += -DLINUX
+CFLAGS += -g -DLINUX
 endif
-LDFLAGS += -lpopt
+LDFLAGS += -g -lpopt
 
 all: lpc935-prog$(EXT)
 
