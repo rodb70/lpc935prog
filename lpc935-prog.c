@@ -1043,7 +1043,7 @@ static int lpc_PlaceInBootLoaderMode( tsSerialPort *psSerPrt )
 
         ser_SetDtrTo( psSerPrt, PWR_OFF ); /* power off */
         ser_SetRtsTo( psSerPrt, RST_LO ); /* reset low */
-        udelay( 500000 );
+        udelay( 1000000 );
         
         ser_SetDtrTo( psSerPrt, PWR_ON ); /* power up */
         udelay( 100000 );
