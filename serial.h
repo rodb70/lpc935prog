@@ -31,7 +31,7 @@ typedef struct
     struct termios sNewTio;
 } tsSerialPort;
 #else
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(WIN32) ||defined(_WIN32)
 typedef struct
 {
     HANDLE hCom;     /* Com port handle */

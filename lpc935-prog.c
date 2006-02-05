@@ -31,7 +31,7 @@
 #include <unistd.h>
 #include <termios.h>
 #endif
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(WIN32) ||defined(_WIN32)
 #include <windows.h>
 #include <time.h>
 #endif
@@ -1172,7 +1172,7 @@ static int lpc_Program( tsSerialPort *psSerPrt, char *pacFilename )
 }
 #endif
 
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(WIN32) ||defined(_WIN32)
 static void udelay( int uS )
 {
     LARGE_INTEGER llPerfCount;
@@ -1251,4 +1251,3 @@ int lpc_RxdPacket( void *pvBuf, int zLen )
 
     return( zRtnv );
 }
-

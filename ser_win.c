@@ -167,7 +167,7 @@ int ser_Read( tsSerialPort *psSerPrt, void *pvBuff, int zLen, int zTimeout,
     if( 0 != zDataAvail );
     {
         while(( zTimeout > 0 ) && ( zTotalBytesRead < zLen ) &&
-              ( 0 != fPktChk( pbBuf, zBytesRxd )))
+              ( 0 != fPktChk( pbBuff, zBytesRead )))
         {
             zDataAvail = ser_RxPoll( psSerPrt );
             if( 0 != zDataAvail )

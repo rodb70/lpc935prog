@@ -21,7 +21,6 @@
 -include config.mak
 CC := $(CROSS_COMPILE)gcc
 
-LDFLAGS :=
 
 SRC :=
 SRC += ihex.c
@@ -30,18 +29,22 @@ SRC += lpc935-prog.c
 
 ifeq ($(WINDOWS),yes)
 SRC += ser_win.c
-CFLAGS += -DWINDOWS
+CFLAGS += -g -DWINDOWS -I popt
+# It would seem that I need to link this here to make it work under 
+# windows.  How weird
+LOCAL_LIBS += popt/libpopt.a
 EXT := .exe
 else
 SRC += ser_linux.c
 CFLAGS += -g -DLINUX
+LDFLAGS += -lpopt
 endif
-LDFLAGS += -g -lpopt
+LDFLAGS += -g
 
 all: lpc935-prog$(EXT)
 
 lpc935-prog$(EXT): $(patsubst %.c,%.o, $(SRC))
-	$(CC) $(LDFLAGS) -o $@ $+
+	$(CC) $(LDFLAGS) -o $@ $+ $(LOCAL_LIBS)
 
 .PHONY : clean
 clean :
