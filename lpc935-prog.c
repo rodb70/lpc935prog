@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <popt.h>
+#include <string.h>
 #ifdef LINUX
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -592,7 +593,7 @@ static int lpc_ReadUcfg1( tsSerialPort *psSerPrt )
               break;
 
           case( 3 ) :
-              printf( "    Internal RC oscillator, 7.373 MHz +-2.5%.\n" );
+              printf( "    Internal RC oscillator, 7.373 MHz +-2.5%%.\n" );
               break;
 
           case( 2 ) :
