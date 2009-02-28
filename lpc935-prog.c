@@ -49,7 +49,7 @@
 #define RST_LO LN_HI
 
 /* Defines for the Auto baud resync */
-#define BAUD_SYNC_ERR_CNT 4
+#define BAUD_SYNC_ERR_CNT 8
 #define AUTO_BAUD_CHAR 'U'
 #define AUTO_BAUD_STR "U"
 
@@ -1099,6 +1099,11 @@ static int lpc_SyncBaud( tsSerialPort *psSerPrt )
     debug_printf( " Received %c - %d - 0x%02x ErrCnt = %d\n", cRply,
                   cRply & 0xff, cRply & 0xff, zErrCnt );
 
+    /* Flush serial buffer */
+    while( ser_RxPoll( psSerPrt ))
+    {
+        ser_Read( psSerPrt, &cRply, 1, 250000, lpc_RxdPacket );
+    } 
     return( zRtnv );
 }
 
