@@ -27,6 +27,7 @@ SRC += ihex.c
 SRC += lpc935-prog.c
 
 
+# If building for windows
 ifeq ($(WINDOWS),yes)
 SRC += ser_win.c
 CFLAGS += -g -DWINDOWS -I popt
@@ -41,19 +42,29 @@ LDFLAGS += -lpopt
 endif
 LDFLAGS += -g
 
+# New improved extra sexy verbose mode
+V ?= 0
+ifeq ($(V),1)
+OUTPUT := > /dev/null
+else
+MAKEFLAGS += -s
+endif
+
+
 all: lpc935-prog$(EXT)
 
 lpc935-prog$(EXT): $(patsubst %.c,%.o, $(SRC))
+	@echo "Linking   : $@" $(OUTPUT)
 	$(CC) $(LDFLAGS) -o $@ $+ $(LOCAL_LIBS)
 
 .PHONY : clean
 clean :
-	rm -rf $(patsubst %.c,%.o,$(SRC)) $(patsubst %.c,%.d,$(SRC)) lpc935-prog$(EXT)
-
-%.d : %.c 
-	$(CC) -MM $(CFLAGS) $< > $*.d
+	@echo "Cleaning" $(OUTPUT)
+	rm -rf $(patsubst %.c,%.o,$(SRC)) $(patsubst %.c,%.d,$(SRC)) lpc935-prog$(EXT) *~
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $*.o
+	@echo "Compiling : $(notdir $<)" $(OUTPUT)
+	$(CC) $(CFLAGS) -c -MD $< -o $@
 
-include $(patsubst %.c,%.d,$(SRC))
+# Do auto dependencies like http://make.paulandlesley.org/autodep.html
+-include $(patsubst %.c,%.d,$(SRC))
