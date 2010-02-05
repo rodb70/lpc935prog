@@ -102,13 +102,20 @@
 /* 08 Reset MCU */
 #define RESET_MCU 0x08
 
+/* 10 programmer read */
+#define PROG_GET 0x0a
+/* 08 programmer write */
+#define PROG_SET 0x0b
+/* programer get and set sub commands */
+#define PROG_PWR_OFF_TIME 0
+#define PROG_ICP_STATE    1
 
 typedef enum
 {
     eWDTE = 0x80,  /**< Watchdog time enable */
     eRPE = 0x40, /**< Reset pin enable */
     eBOE = 0x20, /**< Brownout detect enable */
-    eWDSE = 0x10, /**< Watchdos Safely enable bit */
+    eWDSE = 0x10, /**< Watchdog Safely enable bit */
     eFOSC2 = 0x04, /**< Oscillator configuration bit 2 */
     eFOSC1 = 0x02, /**< Oscillator configuration bit 1 */
     eFOSC0 = 0x01 /**< Oscillator configuration bit 0 */
@@ -146,9 +153,11 @@ int zBaud = 4800; /**< Baud rate to talk to the micro with */
 int zShowDebug = 0; /**< If set then print out lots of debug infomation */
 int zSecBytex = -1; /**< The security byte to read */
 int zOperAddr = 0; /**< The address that a operation will be performed on */
+int zIsSerProg = 1; /**< is set to 1 of we are programming with serial programmer */
 char *pacComPort; /**< The communications port to used to talk to the micro */
 char *pacHexFile; /**< The hex filename to program into the microcontroller */
 char *pacSubCommand = NULL; /**< This is the sub command that is required */
+char *pacProgrammer; /**< Programmer to use either serial of bridge default is serial */
 
 tePROG_COMMAND eProgCommand; /**< The command to perform on the micro-controller */
 
@@ -196,6 +205,7 @@ struct poptOption optionsTable[] =
 
     { "baud", 'b', POPT_ARG_INT, &zBaud, 0, "baud rate to communicate with", "BAUD" },
     { "port", 'p', POPT_ARG_STRING, &pacComPort, 0, "Communications port to use", "PORT" },
+    { "programmer", 'o', POPT_ARG_STRING, &pacProgrammer, 0, "Use programmer", "serial|bridge" },
 
     { "verbose", 'v', POPT_ARG_NONE, &zShowDebug, 0, "Print out debug infomation", 0 },
 
@@ -207,6 +217,7 @@ struct poptOption optionsTable[] =
 /* Private local functions */
 static void usage( poptContext optCon, int exitcode, char *error, char *addl );
 static unsigned char lpc_GetReplyByte( char *pacTxd, char *pacRxd );
+static unsigned short lpc_GetReplyShort( char *pacTxd, char *pacRxd );
 static unsigned long lpc_GetReplyLong( char *pacTxd, char *pacRxd );
 static void debug_printf( const char *format, ... );
 static int lpc_ReadIds( tsSerialPort *psSerPrt );
@@ -224,6 +235,10 @@ static int lpc_WriteUcfg1( tsSerialPort *psSerPrt, unsigned char bNewCfg1 );
 static int lpc_WriteBootV( tsSerialPort *psSerPrt, unsigned char bNewBootV );
 static int lpc_WriteStatB( tsSerialPort *psSerPrt, unsigned char bNewStatB );
 static int lpc_WriteSecx( tsSerialPort *psSerPrt, unsigned char bSecxReg, unsigned char bSecxDat );
+static int lpc_ReadIcpState( tsSerialPort *psSerPrt );
+static int lpc_ReadOffTime( tsSerialPort *psSerPrt );
+static int lpc_WriteIcpState( tsSerialPort *psSerPrt, unsigned char bState );
+static int lpc_WriteOffTime( tsSerialPort *psSerPrt, unsigned short wTime );
 static int lpc_PlaceInBootLoaderMode( tsSerialPort *psSerPrt );
 static int lpc_SyncBaud( tsSerialPort *psSerPrt );
 static int lpc_Program( tsSerialPort *psSerPrt, char *pacFilename );
@@ -279,17 +294,26 @@ int main( const int argc, const char **argv)
         }
     }
 
+    if( 0 == strcmp( "bridge", pacProgrammer ))
+    {
+        zBaud = 19200;
+        zIsSerProg = 0;
+    }
+    
     if((pacSubCommand != NULL ) && ( -1 != ser_Open( &sSerPrt, pacComPort, zBaud )))
     {
         /* Once the serial port is opened it must also power up the board and force entry into the
            boodloader mode */
-        if( 0 == lpc_PlaceInBootLoaderMode( &sSerPrt ))
+        if( 0 != zIsSerProg )
         {
-            debug_printf( "Micro placed in boot loader mode sucessfully\n" );
-        }
-        else
-        {
-            debug_printf( "Failed to place micro in bootloader mode\n" );
+            if( 0 == lpc_PlaceInBootLoaderMode( &sSerPrt ))
+            {
+                debug_printf( "Micro placed in boot loader mode sucessfully\n" );
+            }
+            else
+            {
+                debug_printf( "Failed to place micro in bootloader mode\n" );
+            }
         }
         
         /* Then perform the required command */
@@ -431,6 +455,28 @@ static unsigned char lpc_GetReplyByte( char *pacTxd, char *pacRxd )
 }
 
 
+static unsigned short lpc_GetReplyShort( char *pacTxd, char *pacRxd )
+{
+    unsigned short lRplyShort = 0xbad0;
+    char *pacRply;
+    int i;
+
+    if(( 0 < strlen( pacRxd )) &&
+       ( '.' == *( pacRxd + strlen( pacRxd ) - 3 )) &&
+       ( 0 == strncasecmp( pacTxd, pacRxd, strlen( pacTxd ))))
+    {
+        pacRply = pacRxd + strlen( pacTxd );
+        for( i = 0; i < 4; i++ )
+        {
+            lRplyShort <<= 4;
+            lRplyShort |= nibble( *( pacRply + i ));
+        }
+    }
+
+    return( lRplyShort );
+}
+
+
 static unsigned long lpc_GetReplyLong( char *pacTxd, char *pacRxd )
 {
     unsigned long lRplyLong = 0xbad0bad0;
@@ -466,7 +512,7 @@ static void debug_printf( const char *pacFormat, ... )
         vsnprintf( p, sizeof( p ), pacFormat, ap );
         va_end( ap );
 
-        printf( p );
+        printf( "%s", p );
         fflush( stdout );
     }
 }
@@ -589,7 +635,7 @@ static int lpc_ReadUcfg1( tsSerialPort *psSerPrt )
               break;
 
           case( 4 ) :
-              printf( "    Watchdog Oscillator, 400 kHz (+20/ -30% tolerance).\n" );
+              printf( "    Watchdog Oscillator, 400 kHz (+20/ -30%% tolerance).\n" );
               break;
 
           case( 3 ) :
@@ -802,7 +848,7 @@ static int lpc_ReadGlobalCrc( tsSerialPort *psSerPrt )
     debug_printf( "Read %s - size = %d\n", acRply, bReplySize );
     if( 0 < bReplySize )
     {
-        printf( "Global chip CRC is: 0x%08x\n", lpc_GetReplyLong( acIhexStr, acRply ));
+        printf( "Global chip CRC is: 0x%08x\n", (unsigned int)lpc_GetReplyLong( acIhexStr, acRply ));
     }
     
     return( 0 );
@@ -835,7 +881,7 @@ static int lpc_ReadSectorCrc( tsSerialPort *psSerPrt, unsigned short wSectorAddr
     if( 0 < bReplySize )
     {
         printf( "Sector 0x%02x00 CRC is: 0x%08x\n", wSectorAddr,
-                lpc_GetReplyLong( acIhexStr, acRply ));
+                (unsigned int)lpc_GetReplyLong( acIhexStr, acRply ));
     }
     
     return( 0 );
@@ -1013,6 +1059,110 @@ static int lpc_WriteSecx( tsSerialPort *psSerPrt, unsigned char bSecxReg, unsign
         debug_printf( "Read %s\n", acRply );
     }
     
+    return( 0 );
+}
+
+
+static int lpc_ReadIcpState( tsSerialPort *psSerPrt )
+{
+    char acIhexStr[ 20 ];
+    char acRply[ 100 ];
+    unsigned char bDat;
+    unsigned char bReplySize;
+
+    debug_printf( "Read programmer ICP state from port %s baud = %d\n", pacComPort, zBaud );
+
+    /* Read programmer ICP */
+    bDat = PROG_ICP_STATE;
+    snintel_hex( acIhexStr, sizeof( acIhexStr ), PROG_GET, &bDat, sizeof( bDat ), 0 );
+    debug_printf( "Sending %s\n", acIhexStr );
+    memset( acRply, 0, sizeof( acRply ));
+    ser_Write( psSerPrt, acIhexStr, strlen( acIhexStr ));
+    bReplySize = ser_Read( psSerPrt, acRply, sizeof( acRply ), 1000000, lpc_RxdPacket );
+    debug_printf( "Read %s\n", acRply );
+    if( 0 < bReplySize )
+    {
+        bDat = lpc_GetReplyByte( acIhexStr, acRply );
+
+        debug_printf( "The programmier ICP state is: 0x%02x\n", bDat );
+    }
+
+    return( bDat );
+}
+
+
+static int lpc_ReadOffTime( tsSerialPort *psSerPrt )
+{
+    char acIhexStr[ 20 ];
+    char acRply[ 100 ];
+    unsigned char bDat;
+    unsigned char bReplySize;
+    unsigned short wOffTime = 0;
+
+    debug_printf( "Read programmer off time from port %s baud = %d\n", pacComPort, zBaud );
+
+    /* Read programmer off timer */
+    bDat = PROG_PWR_OFF_TIME;
+    snintel_hex( acIhexStr, sizeof( acIhexStr ), PROG_GET, &bDat, sizeof( bDat ), 0 );
+    debug_printf( "Sending %s\n", acIhexStr );
+    memset( acRply, 0, sizeof( acRply ));
+    ser_Write( psSerPrt, acIhexStr, strlen( acIhexStr ));
+    bReplySize = ser_Read( psSerPrt, acRply, sizeof( acRply ), 1000000, lpc_RxdPacket );
+    debug_printf( "Read %s\n", acRply );
+    if( 0 < bReplySize )
+    {
+        wOffTime = lpc_GetReplyShort( acIhexStr, acRply );
+
+        debug_printf( "The programmier ICP state is: 0x%04x\n", wOffTime );
+    }
+
+    return wOffTime;
+}
+
+
+static int lpc_WriteIcpState( tsSerialPort *psSerPrt, unsigned char bState )
+{
+    char acIhexStr[ 20 ];
+    char acRply[ 100 ];
+    unsigned char bReplySize;
+    unsigned char abDat[ 2 ];
+
+    abDat[ 0 ] = PROG_ICP_STATE;
+    abDat[ 1 ] = bState;
+
+    debug_printf( "set the ICP state to 0x%02x on port %s baud = %d\n",
+                  bState, pacComPort, zBaud );
+    snintel_hex( acIhexStr, sizeof( acIhexStr ), PROG_SET, abDat, sizeof( abDat ), 0 );
+    debug_printf( "Sending %s\n", acIhexStr );
+    memset( acRply, 0, sizeof( acRply ));
+    ser_Write( psSerPrt, acIhexStr, strlen( acIhexStr ));
+    bReplySize = ser_Read( psSerPrt, acRply, sizeof( acRply ), 1000000, lpc_RxdPacket );
+    debug_printf( "Read %s\n", acRply );
+
+    return( 0 );
+}
+
+
+static int lpc_WriteOffTime( tsSerialPort *psSerPrt, unsigned short wTime )
+{
+    char acIhexStr[ 20 ];
+    char acRply[ 100 ];
+    unsigned char bReplySize;
+    unsigned char abDat[ 3 ];
+
+    abDat[ 0 ] = PROG_PWR_OFF_TIME;
+    abDat[ 1 ] = ( unsigned char )(( wTime >> 8 ) & 0xff );
+    abDat[ 2 ] = ( unsigned char )( wTime & 0xff );
+
+    debug_printf( "set the off delay time of the programmer to 0x%04x on port %s baud = %d\n",
+                  wTime, pacComPort, zBaud );
+    snintel_hex( acIhexStr, sizeof( acIhexStr ), PROG_SET, abDat, sizeof( abDat ), 0 );
+    debug_printf( "Sending %s\n", acIhexStr );
+    memset( acRply, 0, sizeof( acRply ));
+    ser_Write( psSerPrt, acIhexStr, strlen( acIhexStr ));
+    bReplySize = ser_Read( psSerPrt, acRply, sizeof( acRply ), 1000000, lpc_RxdPacket );
+    debug_printf( "Read %s\n", acRply );
+
     return( 0 );
 }
 
