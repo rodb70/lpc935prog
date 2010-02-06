@@ -244,7 +244,7 @@ static int lpc_WriteOffTime( tsSerialPort *psSerPrt, unsigned short wTime );
 static int lpc_PlaceInBootLoaderMode( tsSerialPort *psSerPrt );
 static int lpc_SyncBaud( tsSerialPort *psSerPrt );
 static int lpc_Program( tsSerialPort *psSerPrt, char *pacFilename );
-static void udelay( int uS );
+static void udelay( unsigned int uS );
 int lpc_RxdPacket( void *pvBuf, int zLen );
 
 
@@ -1175,7 +1175,7 @@ static int lpc_WriteIcpState( tsSerialPort *psSerPrt, unsigned char bState )
     char acRply[ 100 ];
     unsigned char bReplySize;
     unsigned char abDat[ 2 ];
-    int zICPEntryTime = 3000;
+    unsigned int zICPEntryTime = 3000;
 
     abDat[ 0 ] = PROG_ICP_STATE;
     abDat[ 1 ] = bState;
@@ -1198,7 +1198,7 @@ static int lpc_WriteIcpState( tsSerialPort *psSerPrt, unsigned char bState )
     if( bState != 0 )
     {
         debug_printf( "Sleeping ICP entry time of %d\n", zICPEntryTime );
-        udelay( zICPEntryTime );
+        udelay( zICPEntryTime * 1000 );
     }
     
     return( 0 );
@@ -1348,7 +1348,7 @@ static int lpc_Program( tsSerialPort *psSerPrt, char *pacFilename )
 }
 
 #if defined(WINDOWS) || defined(WIN32) ||defined(_WIN32)
-static void udelay( int uS )
+static void udelay( unsigned int uS )
 {
     LARGE_INTEGER llPerfCount;
     LONGLONG llPerfCount2;
@@ -1394,7 +1394,7 @@ static void udelay( int uS )
 
 #ifdef LINUX
 #include <sys/time.h>
-static void udelay( int uS )
+static void udelay( unsigned int uS )
 {
     struct timeval sTv;
     unsigned long lCurUsec;
@@ -1407,6 +1407,8 @@ static void udelay( int uS )
         gettimeofday( &sTv, 0 );
         lCurUsec = (sTv.tv_sec * 1000000 ) + sTv.tv_usec;
     } while(( lCurUsec - lOldUsec ) < uS );
+    /* debug_printf( "cur %lu, old %lu, cur - old = %lu\n", lCurUsec, lOldUsec,
+       lCurUsec - lOldUsec ); */
 }
 #endif
 
