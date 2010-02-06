@@ -237,7 +237,7 @@ static int lpc_WriteUcfg1( tsSerialPort *psSerPrt, unsigned char bNewCfg1 );
 static int lpc_WriteBootV( tsSerialPort *psSerPrt, unsigned char bNewBootV );
 static int lpc_WriteStatB( tsSerialPort *psSerPrt, unsigned char bNewStatB );
 static int lpc_WriteSecx( tsSerialPort *psSerPrt, unsigned char bSecxReg, unsigned char bSecxDat );
-static int lpc_ReadIcpState( tsSerialPort *psSerPrt );
+static int lpc_ReadIcpState( tsSerialPort *psSerPrt, int do_print );
 static int lpc_ReadOffTime( tsSerialPort *psSerPrt );
 static int lpc_WriteIcpState( tsSerialPort *psSerPrt, unsigned char bState );
 static int lpc_WriteOffTime( tsSerialPort *psSerPrt, unsigned short wTime );
@@ -320,11 +320,10 @@ int main( const int argc, const char **argv)
         }
         else
         {
-            if( 0 == lpc_ReadIcpState( &sSerPrt ))
+            if( 0 == lpc_ReadIcpState( &sSerPrt, 0 ))
             {
                 /* error not in ICP state */
                 fprintf( stderr, "Not in ICP mode\n" );
-                exit( -1 );
             }
         }
         
@@ -419,7 +418,7 @@ int main( const int argc, const char **argv)
               else if(( 0 == strcasecmp( pacCommandList[ PROG_ENT_ICP ], pacSubCommand )) &&
                       ( 0 == zIsSerProg ))
               {
-                  lpc_ReadIcpState( &sSerPrt );
+                  lpc_ReadIcpState( &sSerPrt, 1 );
               }
               else
               {
@@ -1104,28 +1103,37 @@ static int lpc_WriteSecx( tsSerialPort *psSerPrt, unsigned char bSecxReg, unsign
 }
 
 
-static int lpc_ReadIcpState( tsSerialPort *psSerPrt )
+static int lpc_ReadIcpState( tsSerialPort *psSerPrt, int do_print )
 {
     char acIhexStr[ 20 ];
     char acRply[ 100 ];
     unsigned char bDat;
     unsigned char bReplySize;
 
-    debug_printf( "Read programmer ICP state from port %s baud = %d\n", pacComPort, zBaud );
+    if( do_print != 0 )
+    {
+        debug_printf( "Read programmer ICP state from port %s baud = %d\n",
+                      pacComPort, zBaud );
+    }
 
     /* Read programmer ICP */
     bDat = PROG_ICP_STATE;
-    snintel_hex( acIhexStr, sizeof( acIhexStr ), PROG_GET, &bDat, sizeof( bDat ), zOperAddr );
+    snintel_hex( acIhexStr, sizeof( acIhexStr ), PROG_GET, &bDat, sizeof( bDat ),
+                 zOperAddr );
     debug_printf( "Sending %s\n", acIhexStr );
     memset( acRply, 0, sizeof( acRply ));
     ser_Write( psSerPrt, acIhexStr, strlen( acIhexStr ));
-    bReplySize = ser_Read( psSerPrt, acRply, sizeof( acRply ), 1000000, lpc_RxdPacket );
+    bReplySize = ser_Read( psSerPrt, acRply, sizeof( acRply ), 1000000,
+                           lpc_RxdPacket );
     debug_printf( "Read %s\n", acRply );
     if( 0 < bReplySize )
     {
         bDat = lpc_GetReplyByte( acIhexStr, acRply );
 
-        debug_printf( "The programmier ICP state is: 0x%02x\n", bDat );
+        if( do_print != 0 )
+        {
+            printf( "The programmier ICP state is: 0x%02x\n", bDat );
+        }
     }
 
     return( bDat );
@@ -1154,7 +1162,7 @@ static int lpc_ReadOffTime( tsSerialPort *psSerPrt )
     {
         wOffTime = lpc_GetReplyShort( acIhexStr, acRply );
 
-        debug_printf( "The programmier ICP state is: 0x%04x\n", wOffTime );
+        printf( "The programmier ICP off time is: %d - 0x%04x\n", wOffTime, wOffTime );
     }
 
     return wOffTime;
@@ -1167,9 +1175,16 @@ static int lpc_WriteIcpState( tsSerialPort *psSerPrt, unsigned char bState )
     char acRply[ 100 ];
     unsigned char bReplySize;
     unsigned char abDat[ 2 ];
+    int zICPEntryTime = 3000;
 
     abDat[ 0 ] = PROG_ICP_STATE;
     abDat[ 1 ] = bState;
+
+    if( bState != 0 )
+    {
+        /* Need to delay the power up time */
+        zICPEntryTime = lpc_ReadOffTime( psSerPrt );
+    }
 
     debug_printf( "set the ICP state to 0x%02x on port %s baud = %d\n",
                   bState, pacComPort, zBaud );
@@ -1180,6 +1195,12 @@ static int lpc_WriteIcpState( tsSerialPort *psSerPrt, unsigned char bState )
     bReplySize = ser_Read( psSerPrt, acRply, sizeof( acRply ), 1000000, lpc_RxdPacket );
     debug_printf( "Read %s\n", acRply );
 
+    if( bState != 0 )
+    {
+        debug_printf( "Sleeping ICP entry time of %d\n", zICPEntryTime );
+        udelay( zICPEntryTime );
+    }
+    
     return( 0 );
 }
 
