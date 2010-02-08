@@ -157,7 +157,7 @@ int zIsSerProg = 1; /**< is set to 1 of we are programming with serial programme
 char *pacComPort; /**< The communications port to used to talk to the micro */
 char *pacHexFile; /**< The hex filename to program into the microcontroller */
 char *pacSubCommand = NULL; /**< This is the sub command that is required */
-char *pacProgrammer = "serial"; /**< Programmer to use either serial of bridge default is serial */
+char *pacProgrammer = "bridge"; /**< Programmer to use either serial of bridge default is serial */
 
 tePROG_COMMAND eProgCommand; /**< The command to perform on the micro-controller */
 
