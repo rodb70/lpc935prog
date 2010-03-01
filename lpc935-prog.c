@@ -323,7 +323,7 @@ int main( const int argc, const char **argv)
             if( 0 == lpc_ReadIcpState( &sSerPrt, 0 ))
             {
                 /* error not in ICP state */
-                fprintf( stderr, "Not in ICP mode\n" );
+                debug_printf( "Not in ICP mode\n" );
             }
         }
         
