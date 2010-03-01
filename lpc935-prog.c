@@ -332,7 +332,11 @@ int main( const int argc, const char **argv)
         {
           case( ePROG ) :
               pacArg = (void *)poptGetArg( optCon );
-              lpc_Program( &sSerPrt, pacArg );
+              if( 0 > lpc_Program( &sSerPrt, pacArg ))
+              {
+                  fprintf( stderr, "File %s not found\n", pacArg );
+                  return -1;
+              }
               break;
               
           case( eWRITE ) :
@@ -1341,6 +1345,7 @@ static int lpc_Program( tsSerialPort *psSerPrt, char *pacFilename )
                 fflush( stdout );
             }
         }
+        zRtnv = zFileSize;
         printf( "\n" );
     }
 
