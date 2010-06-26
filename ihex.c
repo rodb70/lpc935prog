@@ -26,7 +26,7 @@
 
 #include "ihex.h"
 
-/* Define intel record types */
+/* Define Intel record types */
 #define DATA_RECORD            0x00
 #define END_OF_FILE            0x01
 #define EXTENDED_LINER_ADDRESS 0x04
@@ -40,7 +40,6 @@
 /* Maximum size of line being read */
 #define TEXT_BUFFER 524
 #define START_INTEL_DATA_SECTION 9
-#define MIN_INTEL_LINE_SIZE 11
 
 static int do_chechsum( const char *record);
 static unsigned char get_checksum( unsigned char sum );
@@ -71,7 +70,6 @@ unsigned int read_intel_hex( char *pacFilename, unsigned char pabData[], unsigne
     char buff[ TEXT_BUFFER ];
     unsigned int rec_type;
     unsigned int taddr;
-    unsigned int faddr;
     unsigned int max_addr = 0;
     unsigned int rec_len;
     unsigned int i;
@@ -147,19 +145,20 @@ unsigned int read_intel_hex( char *pacFilename, unsigned char pabData[], unsigne
 }
 
 
-/*
-  The following function will given a pointer to a block of data, the size
-  of the data block, length of each hex line, and the filename will output
-  an intel format hex file
-  Parameters
-    pabData - Pointer to the block of data that contains the data to
-              output
-    lLen - The size of teh data block to output to the hex file.
-    lLineLen - The number of characters to output in each line MUST be
-               greater than the minimum length ( 11 chars)
-    pacFilename - The filename to write the intel hex file to.
- Returns
-    A positive value or 0 for all ok.  A negitive value indicates an error.
+/**
+ * Write out an Intel hex file
+ *
+ * The following function will given a pointer to a block of data, the size of
+ * the data block, length of each hex line, and the filename will output an
+ * Intel format hex file
+ *
+ * @param pabData - Pointer to the block of data that contains the data to
+ *                  output
+ * @param lLen - The size of the data block to output to the hex file.
+ * @param lLineLen - The number of characters to output in each line MUST be
+ *                   greater than the minimum length ( 11 chars)
+ * @param pacFilename - The filename to write the Intel hex file to.
+ * @return A positive value or 0 for all OK.  A negative value indicates an error.
  */
 unsigned int write_intel_hex( unsigned char pabData[], unsigned int lLen,
                               unsigned int lLineLen, char *pacFilename)
@@ -213,7 +212,7 @@ unsigned int write_intel_hex( unsigned char pabData[], unsigned int lLen,
       fprintf( out, "%s\n", buff );
    }
    
-   /* print out the endof file header */
+   /* print out the end of file header */
    fprintf( out, ":00000001FF\n" );
 
    fclose( out );
@@ -222,17 +221,17 @@ unsigned int write_intel_hex( unsigned char pabData[], unsigned int lLen,
 }
 
 /**
- * This function will return a string in intel hex fomat that is a conversion
+ * This function will return a string in Intel hex format that is a conversion
  * of a data buffer.
  * Parameters
  *   abString - pointer to the return string
- *   lStrLen - the maximum size of the return string includiong the terminating mull
+ *   lStrLen - the maximum size of the return string including the terminating null
  *   bRecId - the record ID to assign to this buffer
- *   pbBuff - pointer to the data buffe to convert to intel string
+ *   pbBuff - pointer to the data buffer to convert to Intel string
  *   bBufLen - the size of the buffer
- *   wStartAddr - The start address to put into the intel hex record
+ *   wStartAddr - The start address to put into the Intel hex record
  * Returns
- *    A positive value or 0 for all ok.  A negitive value indicates an error.
+ *    A positive value or 0 for all OK.  A negative value indicates an error.
  */
 unsigned int snintel_hex( char abString[], unsigned int lStrLen, unsigned char bRecId,
                           unsigned char *pbBuff, unsigned char bBufLen,
@@ -280,7 +279,7 @@ unsigned int snintel_hex( char abString[], unsigned int lStrLen, unsigned char b
 
 
 /*
-   Convert ascii nibble to binary
+   Convert ASCII nibble to binary
  */
 int nibble( char c )
 {

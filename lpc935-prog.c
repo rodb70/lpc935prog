@@ -176,8 +176,18 @@ typedef enum
 
 char *pacCommandList[] =
 {
-    "ids", "version", "statb", "bootv", "ucfg1", "secx", "gcrc", "scrc",
-    "sector", "page", "pofftime", "p2icp", 
+    [ READ_IDS      ] = "ids",
+    [ READ_VER      ] = "version",
+    [ RW_STATB      ] = "statb",
+    [ RW_BOOTV      ] = "bootv",
+    [ RW_UCFG1      ] = "ucfg1",
+    [ RW_SECX       ] = "secx",
+    [ READ_GCRC     ] = "gcrc",
+    [ READ_SCRC     ] = "scrc",
+    [ ERASE_SECTOR  ] = "sector",
+    [ ERASE_PAGE    ] = "page",
+    [ PROG_OFF_TIME ] = "pofftime",
+    [ PROG_ENT_ICP  ] = "p2icp",
 
     NULL
 };
@@ -217,7 +227,6 @@ struct poptOption optionsTable[] =
 
 
 /* Private local functions */
-static void usage( poptContext optCon, int exitcode, char *error, char *addl );
 static unsigned char lpc_GetReplyByte( char *pacTxd, char *pacRxd );
 static unsigned short lpc_GetReplyShort( char *pacTxd, char *pacRxd );
 static unsigned long lpc_GetReplyLong( char *pacTxd, char *pacRxd );
@@ -466,18 +475,6 @@ int main( const int argc, const char **argv)
     
     return( 0 );
 }
-
-
-static void usage( poptContext optCon, int zExitCode, char *pacError, char *pacAddl )
-{
-    poptPrintUsage( optCon, stdout, 0 );
-    if( 0 != pacError )
-    {
-        printf( "%s: %s", pacError, pacAddl );
-    }
-    
-    exit( zExitCode );
-}    
 
 
 static unsigned char lpc_GetReplyByte( char *pacTxd, char *pacRxd )

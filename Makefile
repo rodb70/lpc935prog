@@ -41,30 +41,36 @@ CFLAGS += -g -DLINUX
 LDFLAGS += -lpopt
 endif
 LDFLAGS += -g
+CFLAGS += -std=gnu99
+CFLAGS += -pedantic -Werror -Wall
 
 # New improved extra sexy verbose mode
 V ?= 0
 ifeq ($(V),1)
-OUTPUT := > /dev/null
+NOOUT := > /dev/null
 else
 MAKEFLAGS += -s
 endif
+OUTPUT := build/
 
 
 all: lpc935-prog$(EXT)
 
-lpc935-prog$(EXT): $(patsubst %.c,%.o, $(SRC))
-	@echo "Linking   : $@" $(OUTPUT)
+lpc935-prog$(EXT): $(addprefix $(OUTPUT),$(patsubst %.c,%.o, $(SRC)))
+	@echo "Linking   : $@" $(NOOUT)
 	$(CC) $(LDFLAGS) -o $@ $+ $(LOCAL_LIBS)
 
 .PHONY : clean
 clean :
-	@echo "Cleaning" $(OUTPUT)
-	rm -rf $(patsubst %.c,%.o,$(SRC)) $(patsubst %.c,%.d,$(SRC)) lpc935-prog$(EXT) *~
+	@echo "Cleaning" $(NOOUT)
+	rm -rf $(addprefix $(OUTPUT),$(patsubst %.c,%.o,$(SRC)))
+	rm -rf $(addprefix $(OUTPUT),$(patsubst %.c,%.d,$(SRC))) 
+	rm -rf lpc935-prog$(EXT) *~
 
-%.o: %.c
-	@echo "Compiling : $(notdir $<)" $(OUTPUT)
+$(OUTPUT)%.o: %.c
+	@echo "Compiling : $(notdir $<)" $(NOOUT)
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -MD $< -o $@
 
 # Do auto dependencies like http://make.paulandlesley.org/autodep.html
--include $(patsubst %.c,%.d,$(SRC))
+-include $(addprefix $(OUTPUT),$(patsubst %.c,%.d,$(SRC)))
