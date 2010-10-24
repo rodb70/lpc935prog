@@ -52,16 +52,16 @@ static void word_to_str( char pos[], unsigned int num );
 
 /**
  Function will given the file name and the data pointer to the location
- in memory will read an intel hex file into memory.
+ in memory will read an Intel hex file into memory.
  Parameters:
     pacFilename - char pointer to the filename to open and read.  It is
-                   assumed at this point that the fie exists and is an
-                   intel hexfile.
+                   assumed at this point that the file exists and is an
+                   Intel hex file.
     pabData - a pointer to a location in memory that will hold the binary
-              version of the intel hex file
+              version of the Intel hex file
     lLen - that length of the data block.
  Returns
-    The number of bytes read from the hex file.  A negitive number
+    The number of bytes read from the hex file.  A negative number
     indicates an error.
  */
 unsigned int read_intel_hex( char *pacFilename, unsigned char pabData[], unsigned int lLen)
@@ -96,8 +96,8 @@ unsigned int read_intel_hex( char *pacFilename, unsigned char pabData[], unsigne
 
         rec_type = (nibble( buff[ REC_TYPE_OFFSET ]) << 4) +
             nibble( buff[ REC_TYPE_OFFSET + 1]);
-        /* We donot need to re-checksum the line as it is already done when we
-           got the address bounderies */
+        /* We don't need to re-checksum the line as it is already done when we
+           got the address boundaries */
         switch( rec_type )
         {
           case DATA_RECORD:

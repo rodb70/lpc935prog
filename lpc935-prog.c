@@ -142,20 +142,20 @@ typedef enum
     eNO_COMMAND, /**< Ignore the first command could be used for a default state */
     eREAD, /**< Command read from the micro-controller */
     eERASE, /**< Erase either a sector of a chip */
-    eRESET, /**< Reset the mocro-controller */
+    eRESET, /**< Reset the micro-controller */
     eWRITE, /**< Write to a flash based register on the chip */
-    ePROG, /**< Progrqam a file to the micro-controller */
+    ePROG, /**< Program a file to the micro-controller */
     
     eNO_MORE_COMMANDS /**< End of list token ignore all commands greater than this */
 } tePROG_COMMAND;
 
 int zBaud = 4800; /**< Baud rate to talk to the micro with */
-int zShowDebug = 0; /**< If set then print out lots of debug infomation */
+int zShowDebug = 0; /**< If set then print out lots of debug information */
 int zSecBytex = -1; /**< The security byte to read */
 int zOperAddr = 0; /**< The address that a operation will be performed on */
 int zIsSerProg = 1; /**< is set to 1 of we are programming with serial programmer */
 char *pacComPort; /**< The communications port to used to talk to the micro */
-char *pacHexFile; /**< The hex filename to program into the microcontroller */
+char *pacHexFile; /**< The hex filename to program into the micro-controller */
 char *pacSubCommand = NULL; /**< This is the sub command that is required */
 char *pacProgrammer = "bridge"; /**< Programmer to use either serial of bridge default is serial */
 
@@ -276,7 +276,7 @@ int main( const int argc, const char **argv)
         exit( 1 );
     }
     
-    /* Now do options processing, get portname */
+    /* Now do options processing, get port-name */
     while(( c = poptGetNextOpt( optCon )) >= 0 )
     {
         switch( c )
@@ -319,7 +319,7 @@ int main( const int argc, const char **argv)
         {
             if( 0 == lpc_PlaceInBootLoaderMode( &sSerPrt ))
             {
-                debug_printf( "Micro placed in boot loader mode sucessfully\n" );
+                debug_printf( "Micro placed in boot loader mode successfully\n" );
             }
             else
             {
@@ -1133,7 +1133,7 @@ static int lpc_ReadIcpState( tsSerialPort *psSerPrt, int do_print )
 
         if( do_print != 0 )
         {
-            printf( "The programmier ICP state is: 0x%02x\n", bDat );
+            printf( "The programmer ICP state is: 0x%02x\n", bDat );
         }
     }
 
@@ -1284,7 +1284,7 @@ static int lpc_SyncBaud( tsSerialPort *psSerPrt )
     int zRtnv = -1;
 
     /* Discovered by trial and error and then a big margin for error.
-       It normaly takes two goes from Hyperterm so I'll try four times
+       It normally takes two goes from Hyperterm so I'll try four times
        and then error out */
     while(( cRply != AUTO_BAUD_CHAR ) && ( zErrCnt < BAUD_SYNC_ERR_CNT ))
     {

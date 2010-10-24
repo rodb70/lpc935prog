@@ -112,7 +112,7 @@ int ser_Write( tsSerialPort *psSerPrt, void *pvBuff, int zLen )
         }
         else
         {
-            /* What to do incase of an error */
+            /* What to do in case of an error */
             zWritten = zWrite;
             break;
         }
@@ -170,7 +170,7 @@ int ser_Read( tsSerialPort *psSerPrt, void *pvBuff, int zLen, int zTimeout,
 
             if( zBytesRxd < 0 )
             {
-                /* An error occured so get out a here to */
+                /* An error occurred so get out a here to */
                 break;
             }
             

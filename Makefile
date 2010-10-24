@@ -42,7 +42,7 @@ LDFLAGS += -lpopt
 endif
 LDFLAGS += -g
 CFLAGS += -std=gnu99
-CFLAGS += -pedantic -Werror -Wall
+CFLAGS += -pedantic -Werror -Wall -fstrict-overflow
 
 # New improved extra sexy verbose mode
 V ?= 0
@@ -67,7 +67,7 @@ clean :
 	rm -rf $(addprefix $(OUTPUT),$(patsubst %.c,%.d,$(SRC))) 
 	rm -rf lpc935-prog$(EXT) *~
 
-$(OUTPUT)%.o: %.c
+$(OUTPUT)%.o: %.c Makefile
 	@echo "Compiling : $(notdir $<)" $(NOOUT)
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -MD $< -o $@
