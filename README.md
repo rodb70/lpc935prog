@@ -4,6 +4,7 @@ Programmer for old microcontroller NXP LPC935
 An old tool that allowed programming of the NXP LPC935 8051 CPU from years gone by.
 
 The tools command line arguments are as follows:
+
     Usage: lpc935-prog [OPTIONS]* <filename>
       -g, --prog                                                                 Program an intel hex file to micro
       -w, --write=ucfg1|bootv|statb|pofftime|p2icp                               Write a control register
